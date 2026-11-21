@@ -229,5 +229,13 @@ public static class Program {
 }
 }
 '@
-Add-Type -TypeDefinition $code -ReferencedAssemblies System.Windows.Forms, System.Drawing
-[SpeakerTray.Program]::Run()
+$log = Join-Path $PSScriptRoot 'SpeakerTray.log'
+try {
+    Add-Type -TypeDefinition $code -ReferencedAssemblies System.Windows.Forms, System.Drawing
+    [SpeakerTray.Program]::Run()
+} catch {
+    $msg = "$(Get-Date -Format s)  $($_.Exception.GetType().FullName): $($_.Exception.Message)"
+    Add-Content -Path $log -Value $msg
+    Add-Type -AssemblyName System.Windows.Forms
+    [void][System.Windows.Forms.MessageBox]::Show("SpeakerTray failed to start:`n`n$msg`n`nLogged to $log", 'SpeakerTray')
+}
