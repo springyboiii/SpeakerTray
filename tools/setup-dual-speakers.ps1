@@ -47,7 +47,13 @@ if (-not (Get-Process voicemeeterpro*, voicemeeterpro_x64 -ErrorAction SilentlyC
 }
 $r = [VMR]::VBVMR_Login()
 if ($r -lt 0) { throw "Voicemeeter login failed ($r)" }
-Start-Sleep -Milliseconds 500
+# wait until Voicemeeter answers parameter reads (it can take several seconds after launch)
+$f = 0.0
+for ($i = 0; $i -lt 40; $i++) {
+    [void][VMR]::VBVMR_IsParametersDirty()
+    if ([VMR]::VBVMR_GetParameterFloat('Strip[3].A1', [ref]$f) -eq 0) { break }
+    Start-Sleep -Milliseconds 500
+}
 
 # 2. Outputs, routing, delays
 #    Bus[0]=A1 soundbar, Bus[1]=A2 Sound Party; Strip[3]=Voicemeeter Input (VAIO, where Windows audio arrives)
